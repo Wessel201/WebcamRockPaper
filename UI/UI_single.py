@@ -17,6 +17,8 @@ import numpy as np
 import single_player
 import steen_schaar
 import client
+import threading
+import time
 
 
 # Generates random game code
@@ -110,13 +112,21 @@ class MainWindows(QWidget):
         room = item.split(' ')
         print(room[1])
         self.multi()
-        # Client join room nummer room[1]
+        speler = client.Client(steen_schaar.main, self.get_img, 'join', 'x' + room[1])
+        speler.run_startup()
+        # t1 = threading.Thread(target= client.random_pick)
+        # t1.start()
+        # t1.join()
 
     def join_code(self):
         code = self.ui.lineEdit.text()
         print(code)
         self.multi()
-        # Client join room met code
+        speler = client.Client(steen_schaar.main, self.get_img, 'join', code)
+        speler.run_startup()
+        # t1 = threading.Thread(target= client.test_receive('join'))
+        # t1.start()
+        # t1.join()
 
     def create(self):
         self.ui.label_7.setText(rand())
@@ -194,15 +204,15 @@ class MainWindows(QWidget):
         # self.thread.start()
 
     def player1_img(self, move):
+        print('move', move)
         if move == 'scissor':
             afbeelding = 'schaar'
         elif move == 'rock':
             afbeelding = 'steen'
-        elif move == 'paper':
+        else :
             afbeelding = 'papier'
         pixmap = QPixmap(afbeelding)
         self.ui.label_12.setPixmap(pixmap)
-        # self.ui.label_10.setAlignment(Qt.AlignCenter)
 
     def player2_img(self, com_move):
         if com_move == 'scissor':
@@ -213,13 +223,7 @@ class MainWindows(QWidget):
             afbeelding = 'papier'
         pixmap = QPixmap(afbeelding)
         self.ui.label_13.setPixmap(pixmap)
-        # self.ui.label_11.setAlignment(Qt.AlignCenter)
 
-    def add_score_player1(self,count):
-        self.ui.label_15.setText(str(count))
-
-    def add_score_player1(self, count):
-        self.ui.label_17.setText(str(count))
 
     def get_wins(self, results):
         play1_w = results.count(0)
@@ -229,17 +233,79 @@ class MainWindows(QWidget):
     def create_and_join(self):
         room_code = self.ui.label_7.text()
         self.multi()
-        # client create room code
+        speler = client.Client(steen_schaar.main, self.get_img, 'create', room_code)
+        speler.run_startup()
+
+    def play2_move_lost(self, play_move):
+        if play_move == 'rock':
+            return 'schaar'
+        elif play_move == 'scissor':
+            return 'papier'
+        elif play_move == 'paper':
+            return 'steen'
+
+    def play2_move_won(self, play_move):
+        if play_move == 'rock':
+            return 'papier'
+        elif play_move == 'scissor':
+            return 'steen'
+        elif play_move == 'paper':
+            return 'schaar'
+
+    def add_score_play1(self):
+       score = self.ui.label_15.text()
+       new_score = int(score) + 1
+       self.ui.label_15.setText(str(new_score))
+
+    def add_score_play2(self):
+       score = self.ui.label_17.text()
+       new_score = int(score) + 1
+       self.ui.label_17.setText(str(new_score))
+
+
+    def get_img(self, command, last_move):
+        if (' ' in command):
+            afbeelding = ''
+            print('hopelijk goed', command)
+            move = command.split(' ')
+            if move[1] == 'scissor':
+                afbeelding = 'schaar'
+            elif move[1] == 'rock':
+                afbeelding = 'steen'
+            elif move[1] == 'paper':
+                afbeelding = 'papier'
+            pixmap = QPixmap(afbeelding)
+            self.ui.label_12.setPixmap(pixmap)
+        else:
+            if command == 'draw':
+                print('DRAW', last_move)
+                if last_move == 'scissor':
+                    afbeelding = 'schaar'
+                elif last_move == 'rock':
+                    afbeelding = 'steen'
+                elif last_move == 'paper':
+                    afbeelding = 'papier'
+                pixmap = QPixmap(afbeelding)
+                self.ui.label_13.setPixmap(pixmap)
+            elif command == 'won':
+                print('WON', last_move)
+                move = self.play2_move_lost(last_move)
+                pixmap = QPixmap(move)
+                self.ui.label_13.setPixmap(pixmap)
+                self.add_score_play1()
+            elif command == 'lost':
+                print("LOST", last_move)
+                move = self.play2_move_won(last_move)
+                pixmap = QPixmap(move)
+                self.ui.label_13.setPixmap(pixmap)
+                self.add_score_play2()
+        time.sleep(3)
 
 
     # Roep deze method aan om over te gaan naar multiplayer widget
     def multi(self):
         self.ui.stackedWidget.setCurrentWidget(self.ui.multi_game)
-        # self.thread = VideoThread()
-        # connect its signal to the update_image slot
-        # self.thread.change_pixmap_signal.connect(self.update_image_multi)
-        # start the thread
-        # self.thread.start()
+
 
     # Roep deze methode aan om de move van de tweede player in te vullen in de label
     # Voor multiplayer is de mode 1, single is de mode 0.

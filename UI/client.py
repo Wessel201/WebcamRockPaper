@@ -12,6 +12,8 @@ class Client():
         self.option = option
         self.get_host()
         self.receive_func = receive_func
+        self.last_move = ''
+
 
     def get_host(self):
         try:
@@ -63,11 +65,14 @@ class Client():
         print('Received:' + command)
         if command == 'start':
             choice = self.start_function()
+            self.last_move = choice
             time.sleep(1)
+            self.receive_func('send' + ' ' + choice, self.last_move)
             print("sending result", choice)
             self.s.send(choice.encode())
+            
         else:
-            self.receive_func(command)
+            self.receive_func(command, self.last_move)
 
 
 def demonstration():
@@ -88,13 +93,15 @@ def random_pick():
     return random.choice(picks)
 
 
-def test_receive(command):
+def test_receive(command, move):
     print(command)
+    print(move)
+
 
 
 picks = ['rock', 'paper', 'scissor']
 
 
 if __name__ == "__main__":
-    # Client(steen_schaar.main, sys.argv[1], sys.argv[2]).run_startup()
-    Client(random_pick, test_receive, sys.argv[1], sys.argv[2]).run_startup()
+    speler = Client(random_pick, test_receive,  sys.argv[1], sys.argv[2]).run_startup()
+    # Client(random_pick, test_receive, sys.argv[1], sys.argv[2]).run_startup()

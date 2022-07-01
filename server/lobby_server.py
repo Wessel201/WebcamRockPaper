@@ -94,7 +94,7 @@ def main():
             exit(0)
 
 
-if __name__ == "_main_":
+if __name__ == "__main__":
     with open("server_config.txt", "r") as f:
         HOST = f.readline().strip()
         PORT = int(f.readline().strip())
